@@ -56,53 +56,368 @@ reply(e)
 // YT MP4 DOWNLOAD COMMAND 
 
 cmd({
-    pattern: "video",
-    alias: ["ytv","ytmp4","darama"],
-    desc: "downlode videos",
-    category: "downlode",
-    react: "🎬",
+    pattern: "ytmp4",
+    desc: "Download YouTube videos as MP4.",
+    react: "🎥",
+    category: "download",
     filename: __filename
 },
-async(conn, mek, m,{from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply}) => {
-try{
-if(!q) return reply("*Please give me a title*")
-let search = await yts(q)
-let link = search.all[0].url
-let desc = `
-*╭──────────●●►*
-_*♻️ SILENT-SOBX-MD VIDEO DOWNLOADER ♻️*_
-*╰──────────●●►*
+async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
+    try {
+        if (!q) return reply("Please provide a YouTube URL or title.");
 
- *♻️ TITLE:* ${search.all[0].title}
+        q = convertYouTubeLink(q);
+        const search = await yts(q);
+        const data = search.videos[0];
+        const url = data.url;
 
- *♻️ DESCRIPTION:* ${search.all[0].description}
+        let desc = `
+🎥 *MP4 Download Found!* 
 
- *♻️ DURATION:* ${search.all[0].timestamp}
+➥ *Title:* ${data.title} 
+➥ *Duration:* ${data.timestamp} 
+➥ *Views:* ${data.views} 
+➥ *Uploaded On:* ${data.ago} 
+➥ *Link:* ${data.url} 
 
- *♻️ AGO:* ${search.all[0].ago}
+🎬 *Enjoy the video brought to you by Queen Anju Bot!* 
 
- *♻️ VIEWS:* ${search.all[0].views}
+🔽 *To download send:*
 
- *♻️ URL:* ${search.all[0].url}
+*Video File* 🎶
+   1.1 *360*
+   1.2 *480*
+   1.3 *720*
+   1.4 *1080*
+ *Document File* 📂
+   2.1 *360*
+   2.2 *480*
+   2.3 *720*
+   2.4 *1080*
 
-> © ᴄʀᴇᴀᴛᴇᴅ ʙʏ sɪʟᴇɴᴛʟᴏᴠᴇʀ⁴³² 👩‍💻
+> *Created with ❤️ by Janith Rashmika* 
 
-> ↺ |◁   II   ▷|   ♡
+> *© 𝙌𝙐𝙀𝙀𝙉 𝘼𝙉𝙅𝙐 𝘽𝙊𝙏 - MD*  
+*💻 GitHub:* github.com/Mrrashmika/Queen_Anju-MD
+`;
+let info = `
+🎥 *MP4 Download Found!* 
+
+➥ *Title:* ${data.title} 
+➥ *Duration:* ${data.timestamp} 
+➥ *Views:* ${data.views} 
+➥ *Uploaded On:* ${data.ago} 
+➥ *Link:* ${data.url} 
+
+🎬 *Enjoy the video brought to you by Queen Anju Bot!* 
 `
 
-await conn.sendMessage(from,{image:{url: search.all[0].thumbnail},caption:desc},{quoted:mek})
+// Send the initial message and store the message ID
+const sentMsg = await conn.sendMessage(from, {
+    image: { url: data.thumbnail}, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+    caption: desc,
+    contextInfo: {
+        mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+        groupMentions: [],
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: '120363299978149557@newsletter',
+            newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+            serverMessageId: 999
+        },
+        externalAdReply: {
+            title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+            body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+            mediaType: 1,
+            sourceUrl: "https://github.com/Mrrashmika",
+            thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+            renderLargerThumbnail: false,
+            showAdAttribution: true
+        }
+    }
+  });
+const messageID = sentMsg.key.id; // Save the message ID for later reference
 
 
-        let data = await fetchJson (`https://api.dreaded.site/api/ytdl/video?url=${link}`)
+// Listen for the user's response
+conn.ev.on('messages.upsert', async (messageUpdate) => {
+    const mek = messageUpdate.messages[0];
+    if (!mek.message) return;
+    const messageType = mek.message.conversation || mek.message.extendedTextMessage?.text;
+    const from = mek.key.remoteJid;
+    const sender = mek.key.participant || mek.key.remoteJid;
 
-await conn.sendMessage(from, {
-  video: {url: data.result.downloadLink},
-mimetype: "video/mp4",
- fileName: `${data.result.title}.mp4`,caption: `*© ᴄʀᴇᴀᴛᴇᴅ ʙʏ sɪʟᴇɴᴛʟᴏᴠᴇʀ ···⁴³²* 👩‍💻`}, { quoted: mek })
+    // Check if the message is a reply to the previously sent message
+    const isReplyToSentMsg = mek.message.extendedTextMessage && mek.message.extendedTextMessage.contextInfo.stanzaId === messageID;
 
-}catch(e){
-    console.log(e)
-    reply(`${e}`)
+    if (isReplyToSentMsg) {
+        // React to the user's reply (the "1" or "2" message)
+        await conn.sendMessage(from, { react: { text: '⬇️', key: mek.key } });
+        
+
+        if (messageType === '1.1') {
+            const down = await ytmp4(`${url}`,"360p")                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            await conn.sendMessage(from, {
+                video: { url: downloadUrl}, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                caption: info,
+                contextInfo: {
+                    mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                    groupMentions: [],
+                    forwardingScore: 999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363299978149557@newsletter',
+                        newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                        serverMessageId: 999
+                    },
+                    externalAdReply: {
+                        title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        mediaType: 1,
+                        sourceUrl: "https://github.com/Mrrashmika",
+                        thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                        renderLargerThumbnail: false,
+                        showAdAttribution: true
+                    }
+                }
+              });
+        }else if (messageType === '1.2') {
+            const down = await ytmp4(`${url}`,`480`)                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            await conn.sendMessage(from, {
+                video: { url: downloadUrl}, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                caption: info,
+                contextInfo: {
+                    mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                    groupMentions: [],
+                    forwardingScore: 999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363299978149557@newsletter',
+                        newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                        serverMessageId: 999
+                    },
+                    externalAdReply: {
+                        title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        mediaType: 1,
+                        sourceUrl: "https://github.com/Mrrashmika",
+                        thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                        renderLargerThumbnail: false,
+                        showAdAttribution: true
+                    }
+                }
+              });
+        }else if (messageType === '1.3') {
+            const down = await ytmp4(`${url}`,`720`)                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            await conn.sendMessage(from, {
+                video: { url: downloadUrl}, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                caption: info,
+                contextInfo: {
+                    mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                    groupMentions: [],
+                    forwardingScore: 999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363299978149557@newsletter',
+                        newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                        serverMessageId: 999
+                    },
+                    externalAdReply: {
+                        title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        mediaType: 1,
+                        sourceUrl: "https://github.com/Mrrashmika",
+                        thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                        renderLargerThumbnail: false,
+                        showAdAttribution: true
+                    }
+                }
+              });
+        }else if (messageType === '1.4') {
+            const down = await ytmp4(`${url}`,`1080`)                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            await conn.sendMessage(from, {
+                video: { url: downloadUrl}, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                caption: info,
+                contextInfo: {
+                    mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                    groupMentions: [],
+                    forwardingScore: 999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363299978149557@newsletter',
+                        newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                        serverMessageId: 999
+                    },
+                    externalAdReply: {
+                        title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                        mediaType: 1,
+                        sourceUrl: "https://github.com/Mrrashmika",
+                        thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                        renderLargerThumbnail: false,
+                        showAdAttribution: true
+                    }
+                }
+              });
+        }else if (messageType === '2.1') {
+            const down = await ytmp4(`${url}`,`360`)                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            // Handle option 2 (Document File)
+            await conn.sendMessage(from, {
+                        document: { url: downloadUrl},
+                        mimetype: "video/mp4",
+                        fileName: `${data.title}.mp4`, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                        caption: info,
+                        contextInfo: {
+                            mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                            groupMentions: [],
+                            forwardingScore: 999,
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: '120363299978149557@newsletter',
+                                newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                                serverMessageId: 999
+                            },
+                            externalAdReply: {
+                                title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                mediaType: 1,
+                                sourceUrl: "https://github.com/Mrrashmika",
+                                thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                                renderLargerThumbnail: false,
+                                showAdAttribution: true
+                            }
+                        }
+                      });
+        }else if (messageType === '2.2') {
+            const down = await ytmp4(`${url}`,`480`)                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            // Handle option 2 (Document File)
+            await conn.sendMessage(from, {
+                        document: { url: downloadUrl},
+                        mimetype: "video/mp4",
+                        fileName: `${data.title}.mp4`, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                        caption: info,
+                        contextInfo: {
+                            mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                            groupMentions: [],
+                            forwardingScore: 999,
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: '120363299978149557@newsletter',
+                                newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                                serverMessageId: 999
+                            },
+                            externalAdReply: {
+                                title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                mediaType: 1,
+                                sourceUrl: "https://github.com/Mrrashmika",
+                                thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                                renderLargerThumbnail: false,
+                                showAdAttribution: true
+                            }
+                        }
+                      });
+        }else if (messageType === '2.3') {
+            const down = await ytmp4(`${url}`,`720`)                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            // Handle option 2 (Document File)
+            await conn.sendMessage(from, {
+                        document: { url: downloadUrl},
+                        mimetype: "video/mp4",
+                        fileName: `${data.title}.mp4`, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                        caption: info,
+                        contextInfo: {
+                            mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                            groupMentions: [],
+                            forwardingScore: 999,
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: '120363299978149557@newsletter',
+                                newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                                serverMessageId: 999
+                            },
+                            externalAdReply: {
+                                title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                mediaType: 1,
+                                sourceUrl: "https://github.com/Mrrashmika",
+                                thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                                renderLargerThumbnail: false,
+                                showAdAttribution: true
+                            }
+                        }
+                      });
+        }else if (messageType === '2.4') {
+            const down = await ytmp4(`${url}`,`1080`)                     
+            const downloadUrl = down;
+            // React to the upload (sending the file)
+            await conn.sendMessage(from, { react: { text: '⬆️', key: mek.key } });
+            // Handle option 1 (Audio File)
+            // Handle option 2 (Document File)
+            await conn.sendMessage(from, {
+                        document: { url: downloadUrl},
+                        mimetype: "video/mp4",
+                        fileName: `${data.title}.mp4`, // Ensure `img.allmenu` is a valid image URL or base64 encoded image
+                        caption: info,
+                        contextInfo: {
+                            mentionedJid: ['94717775628@s.whatsapp.net'], // specify mentioned JID(s) if any
+                            groupMentions: [],
+                            forwardingScore: 999,
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: '120363299978149557@newsletter',
+                                newsletterName: "𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃",
+                                serverMessageId: 999
+                            },
+                            externalAdReply: {
+                                title: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                body: '𝐐𝐔𝐄𝐄𝐍 𝐀𝐍𝐉𝐔 𝐌𝐃',
+                                mediaType: 1,
+                                sourceUrl: "https://github.com/Mrrashmika",
+                                thumbnailUrl: 'https://raw.githubusercontent.com/Niko-AND-Janiya/ANJU-DATA/refs/heads/main/LOGOS/6152181515400889311.jpg', // This should match the image URL provided above
+                                renderLargerThumbnail: false,
+                                showAdAttribution: true
+                            }
+                        }
+                      });} 
+
+        // React to the successful completion of the task
+        await conn.sendMessage(from, { react: { text: '✅', key: mek.key } });
+
+        console.log("Response sent successfully");
+    }
+});
+
+} catch (e) {
+console.log(e);
+reply(`${e}`);
 }
-}
-)
+});
