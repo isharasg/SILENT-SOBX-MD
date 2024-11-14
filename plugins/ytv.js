@@ -26,17 +26,17 @@ const url = data.url
 const ytdl = await fetchJson(`${apilink}/download/ytmp3?url=${data.url}`)
     
 let message = `‎‎
-╭═══🎶❃ *SILENT-SOBX-MD-MUSIC-DOWNLOADER* ❃🎶═══⊷
-┃❃╭──────────────
-┃❃│🎵 ‎TITLE: ${data.title}
-┃❃│ ⏱ DURATION: ${data.timestamp}
-┃❃│🌏 UPLOADED: ${data.ago}
-┃❃│🧿 VIEWS: ${data.views}
-┃❃│🤵 AUTHOR: ${data.author.name}
-┃❃│📎 URL: ${data.url}
-┃❃╰───────────────
+╭═══ 🍁🌴*ISHARA-MD-MUSIC-DOWNLOADER*🍁🌴 ═══⊷
+┃❃
+┃❃🎵 ‎TITLE: ${data.title}
+┃❃⏱ DURATION: ${data.timestamp}
+┃❃🌏 UPLOADED: ${data.ago}
+┃❃🧿 VIEWS: ${data.views}
+┃❃🤵 AUTHOR: ${data.author.name}
+┃❃📎 URL: ${data.url}
+┃❃
 ╰═════════════════⊷
-> © ᴄʀᴇᴀᴛᴇᴅ ʙʏ sɪʟᴇɴᴛʟᴏᴠᴇʀ⁴³² 👩‍💻
+> © BY ISHARA-MD 🍁🌴
 
 > ↺ |◁   II   ▷|   ♡
 `
